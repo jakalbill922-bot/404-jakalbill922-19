@@ -16,11 +16,11 @@ class TrellisParams(OverridableModel):
     @classmethod
     def from_settings(cls, settings) -> "TrellisParams":
         return cls(
-            sparse_structure_steps = settings.sparse_structure_steps,
-            sparse_structure_cfg_strength = settings.sparse_structure_cfg_strength,
-            slat_steps = settings.slat_steps,
-            slat_cfg_strength = settings.slat_cfg_strength,
-            num_oversamples = settings.num_oversamples,
+            sparse_structure_steps = settings.trellis_sparse_structure_steps,
+            sparse_structure_cfg_strength = settings.trellis_sparse_structure_cfg_strength,
+            slat_steps = settings.trellis_slat_steps,
+            slat_cfg_strength = settings.trellis_slat_cfg_strength,
+            num_oversamples = settings.trellis_num_oversamples,
         )
 
 TrellisParamsOverrides = TrellisParams.Overrides

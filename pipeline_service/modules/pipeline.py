@@ -11,7 +11,7 @@ import pyspz
 import torch
 import gc
 
-from config.settings import settings, SettingsConf
+from config import Settings, settings
 from logger_config import logger
 from schemas import GenerateRequest, GenerateResponse, TrellisParams, TrellisRequest, TrellisResult
 from modules.image_edit.qwen_edit_module import QwenEditModule
@@ -21,22 +21,18 @@ from modules.utils import secure_randint, set_random_seed, decode_image, to_png_
 
 
 class GenerationPipeline:
-    """
-    Generation pipeline 
-    """
-
-    def __init__(self, settings: SettingsConf = settings):
+    def __init__(self, settings: Settings = settings):
         self.settings = settings
 
         # Initialize modules
-        self.qwen_edit = QwenEditModule(settings.qwen)
-        self.rmbg = BackgroundRemovalService(settings.background_removal)
-        self.trellis = TrellisService(settings.trellis)
+        self.qwen_edit = QwenEditModule(settings)
+        self.rmbg = BackgroundRemovalService(settings)
+        self.trellis = TrellisService(settings)
 
     async def startup(self) -> None:
         """Initialize all pipeline components."""
         logger.info("Starting pipeline")
-        self.settings.output.output_dir.mkdir(parents=True, exist_ok=True)
+        self.settings.output_dir.mkdir(parents=True, exist_ok=True)
 
         await self.qwen_edit.startup()
         await self.rmbg.startup()
@@ -148,13 +144,13 @@ class GenerationPipeline:
         )
 
         # Save generated files
-        if self.settings.output.save_generated_files:
+        if self.settings.save_generated_files:
             save_files(trellis_result, image_edited, image_without_background)
         
         # Convert to PNG base64 for response (only if needed)
         image_edited_base64 = None
         image_without_background_base64 = None
-        if self.settings.output.send_generated_files:
+        if self.settings.send_generated_files:
             image_edited_base64 = to_png_base64(image_edited)
             image_without_background_base64 = to_png_base64(image_without_background)
 
@@ -167,8 +163,8 @@ class GenerationPipeline:
         response = GenerateResponse(
             generation_time=generation_time,
             ply_file_base64=trellis_result.ply_file if trellis_result else None,
-            image_edited_file_base64=image_edited_base64 if self.settings.output.send_generated_files else None,
-            image_without_background_file_base64=image_without_background_base64 if self.settings.output.send_generated_files else None,
+            image_edited_file_base64=image_edited_base64 if self.settings.send_generated_files else None,
+            image_without_background_file_base64=image_without_background_base64 if self.settings.send_generated_files else None,
         )
         return response
 

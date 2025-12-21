@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 import pyspz
 
-from config.settings import settings
+from config import settings
 from logger_config import logger
 from schemas import GenerateRequest, GenerateResponse
 from modules import GenerationPipeline
@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.api.api_title,
+    title=settings.api_title,
     lifespan=lifespan,
 )
 
@@ -45,10 +45,7 @@ app.add_middleware(
 @app.get("/health")
 async def health() -> dict[str, str]:
     """
-    Check if the service is running. 
-
-    Returns:
-        dict[str, str]: Status of the service
+    Check if the service is running.
     """
     return {"status": "ready"}
 
@@ -65,7 +62,7 @@ async def generate_from_base64(request: GenerateRequest) -> GenerateResponse:
         compressed_ply_bytes = None
 
         # compress the ply file 
-        if result.ply_file_base64 and settings.output.compression:
+        if result.ply_file_base64 and settings.compression:
             compressed_ply_bytes = pyspz.compress(result.ply_file_base64, workers=1) # returns bytes
             logger.info(f"Compressed PLY size: {len(compressed_ply_bytes)} bytes")
         
@@ -161,7 +158,8 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "serve:app",
-        host=settings.api.host,
-        port=settings.api.port,
+        host=settings.host,
+        port=settings.port,
         reload=False,
     )
+

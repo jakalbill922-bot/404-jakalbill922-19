@@ -12,7 +12,7 @@ import torch
 from logger_config import logger
 from schemas.trellis_schemas import TrellisResult
 
-from config.settings import settings
+from config import settings
 
 def secure_randint(low: int, high: int) -> int:
     """ Return a random integer in [low, high] using os.urandom. """

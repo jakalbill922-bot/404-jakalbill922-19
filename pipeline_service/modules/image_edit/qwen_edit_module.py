@@ -21,7 +21,7 @@ import hashlib
 
 from diffusers.models import QwenImageTransformer2DModel
 from modules.image_edit.qwen_manager import QwenManager
-from config.settings import QwenConfig
+from config import Settings
 
 class EmbeddedPrompting(BaseModel):
     prompt_embeds: BFloatTensor
@@ -34,20 +34,20 @@ class TextPrompting(BaseModel):
 class QwenEditModule(QwenManager):
     """Qwen module for image editing operations."""
 
-    def __init__(self, settings: QwenConfig):
+    def __init__(self, settings: Settings):
         super().__init__(settings)
         self._empty_image = Image.new('RGB', (1024, 1024))
 
-        self.base_model_path = settings.base_model_path
-        self.edit_model_path = settings.model_path
-        self.prompt_path = settings.prompt_path
+        self.base_model_path = settings.qwen_edit_base_model_path
+        self.edit_model_path = settings.qwen_edit_model_path
+        self.prompt_path = settings.qwen_edit_prompt_path
         self.prompting = self._set_prompting()
 
         self.pipe_config = {
             "num_inference_steps": settings.num_inference_steps,
             "true_cfg_scale": settings.true_cfg_scale,
-            "height": settings.height,
-            "width": settings.width,
+            "height": settings.qwen_edit_height,
+            "width": settings.qwen_edit_width,
 
         }
 
@@ -56,6 +56,7 @@ class QwenEditModule(QwenManager):
         with open(path, "r") as f:
             edit_prompt = TextPrompting.model_validate_json(json.dumps(json.load(f)))
             return edit_prompt
+
 
     def _set_embedded_prompting(self, path: Optional[PathLike] = None) -> EmbeddedPrompting:
         path = path or self.prompt_path

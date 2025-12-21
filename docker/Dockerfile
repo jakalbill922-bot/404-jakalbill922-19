@@ -77,7 +77,6 @@ WORKDIR /workspace
 
 # Copy the project
 COPY pipeline_service /workspace
-COPY configuration.yaml /workspace/configuration.yaml
 
 EXPOSE 10006
 CMD ["python",  "serve.py"]

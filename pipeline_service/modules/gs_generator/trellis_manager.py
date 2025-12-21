@@ -10,16 +10,16 @@ import io
 import torch
 from PIL import Image, ImageStat
 
-from config.settings import TrellisConfig
+from config import Settings
 from logger_config import logger
 from libs.trellis.pipelines import TrellisImageTo3DPipeline
 from schemas import TrellisResult, TrellisRequest, TrellisParams
 
 class TrellisService:
-    def __init__(self, settings: TrellisConfig):
+    def __init__(self, settings: Settings):
         self.settings = settings
         self.pipeline: Optional[TrellisImageTo3DPipeline] = None
-        self.gpu = settings.gpu
+        self.gpu = settings.trellis_gpu
         self.default_params = TrellisParams.from_settings(self.settings)
 
     async def startup(self) -> None:
@@ -31,7 +31,7 @@ class TrellisService:
             torch.cuda.set_device(self.gpu)
 
         self.pipeline = TrellisImageTo3DPipeline.from_pretrained(
-            self.settings.model_id
+            self.settings.trellis_model_id
         )
         self.pipeline.cuda()
         logger.success("Trellis pipeline ready.")
@@ -45,21 +45,21 @@ class TrellisService:
 
     def generate(
         self,
-        request: TrellisRequest,
+        trellis_request: TrellisRequest,
     ) -> TrellisResult:
         if not self.pipeline:
             raise RuntimeError("Trellis pipeline not loaded.")
 
-        image_rgb = request.image.convert("RGB")
-        logger.info(f"Generating Trellis {request.seed=} and image size {request.image.size}")
+        image_rgb = trellis_request.image.convert("RGB")
+        logger.info(f"Generating Trellis {trellis_request.seed=} and image size {trellis_request.image.size}")
 
-        params = self.default_params.overrided(request.params)
+        params = self.default_params.overrided(trellis_request.params)
 
         start = time.time()
         try:
             outputs = self.pipeline.run(
                 image_rgb,
-                seed=request.seed,
+                seed=trellis_request.seed,
                 sparse_structure_sampler_params={
                     "steps": params.sparse_structure_steps,
                     "cfg_strength": params.sparse_structure_cfg_strength,
